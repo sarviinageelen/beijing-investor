@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jialin Yang</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Inter:wght@300;400&display=swap" rel="stylesheet">
+    <style>
+        /* ------------------- */
+        /* --- CSS Variables & Setup --- */
+        /* ------------------- */
+        :root {
+            --font-main: 'Cormorant Garamond', serif;
+            --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+            /* Vibrant Pink Theme */
+            --color-bg-start: #f2b4bb;
+            --color-bg-end: #f0a3ab;
+            --color-bg-accent: #c9b4f2;
+            --color-text: #ffffff;
+            --color-text-light: rgba(255, 255, 255, 0.8);
+            --color-progress-indicator: rgba(255, 255, 255, 0.35);
+            --color-progress-active: #ffffff;
+            --color-focus-ring: #ffffff;
+
+            /* Custom Easing for a high-end feel */
+            --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+            --animation-duration: 0.6s;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* ------------------- */
+        /* --- Animated Gradient Background --- */
+        /* ------------------- */
+        body {
+            font-family: var(--font-ui);
+            color: var(--color-text);
+            overflow: hidden;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, var(--color-bg-start), var(--color-bg-end), var(--color-bg-accent), var(--color-bg-start));
+            background-size: 400% 400%;
+            animation: animateGradient 25s ease infinite;
+        }
+
+        @keyframes animateGradient {
+            0% { background-position: 0% 0%; }
+            50% { background-position: 100% 100%; }
+            100% { background-position: 0% 0%; }
+        }
+
+        /* ------------------- */
+        /* --- Main Content Layout --- */
+        /* ------------------- */
+        .content-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            text-align: center;
+            padding: 20px;
+        }
+
+        /* ------------------- */
+        /* --- Greeting Text & Animation --- */
+        /* ------------------- */
+        .greeting-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1em;
+            align-items: center;
+        }
+
+        .greeting-static {
+            font-family: var(--font-ui);
+            font-weight: 300;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            font-size: clamp(0.8rem, 3vw, 1.5rem); /* Increased size slightly for longer text */
+            color: var(--color-text-light);
+            opacity: 0;
+            animation: fadeIn 1.5s 0.5s forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .greeting-name {
+            font-family: var(--font-main);
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            font-size: clamp(2.5rem, 10vw, 6rem);
+            white-space: nowrap;
+            min-height: 1.2em;
+            line-height: 1;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* --- Name Transition Animations --- */
+        #name-text.animate-in {
+            animation: fade-in-up var(--animation-duration) var(--ease-out-quint) forwards;
+        }
+
+        @keyframes fade-in-up {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Hide controls since they are not needed */
+        .controls-container {
+            display: none;
+        }
+
+        /* ------------------- */
+        /* --- Accessibility --- */
+        /* ------------------- */
+        @media (prefers-reduced-motion: reduce) {
+            body,
+            .greeting-static,
+            #name-text.animate-in {
+                animation: none;
+                transition: none;
+            }
+            .greeting-static {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="content-wrapper">
+        <div class="greeting-container">
+            <h1 class="greeting-static">Beijing Investor</h1>
+            <div class="greeting-name">
+                <div id="name-text" aria-live="polite" aria-atomic="true"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Controls are hidden via CSS -->
+    <div class="controls-container">
+        <nav class="nav-controls" aria-label="Name switcher">
+            <button id="prev-name" class="nav-button">
+                <span>PREV</span>
+                <span class="underline"></span>
+            </button>
+            <button id="next-name" class="nav-button">
+                <span>NEXT</span>
+                <span class="underline"></span>
+            </button>
+        </nav>
+
+        <div id="progress-indicator" role="status" aria-label="Progress through names">
+            <div class="progress-dots-container"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- 1. CONFIGURATION ---
+            const config = {
+                name: 'Jialin Yang' // Only one name is needed now
+            };
+
+            const PREFERS_REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+            // --- 2. DOM ELEMENT REFERENCES ---
+            const nameEl = document.getElementById('name-text');
+
+            // --- 3. INITIALIZATION ---
+            function init() {
+                if (!nameEl) {
+                    console.error("Initialization failed: #name-text element not found.");
+                    return;
+                }
+
+                // Set the name directly
+                nameEl.textContent = config.name;
+                
+                // Animate the name in if motion is preferred
+                if (!PREFERS_REDUCED_MOTION) {
+                    nameEl.classList.add('animate-in');
+                }
+            }
+
+            init();
+        });
+    </script>
+</body>
+</html>
+
